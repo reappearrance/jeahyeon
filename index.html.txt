@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soccer Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Soccer Game</h1>
+    <canvas id="gameCanvas"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
+
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: green;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+h1 {
+    margin: 20px;
+}
+
+canvas {
+    border: 3px solid white;
+}
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = 800;
+canvas.height = 400;
+
+// 공, 골대, 플레이어 설정
+let ball = {
+    x: 50,
+    y: canvas.height / 2,
+    radius: 10,
+    speed: 5,
+    directionX: 0,
+    directionY: 0
+};
+
+let goal = {
+    x: canvas.width - 50,
+    y: canvas.height / 2 - 50,
+    width: 20,
+    height: 100
+};
+
+let player = {
+    x: 50,
+    y: canvas.height / 2,
+    width: 10,
+    height: 50,
+    speed: 10
+};
+
+let score = 0;
+
+// 공 그리기
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    ctx.closePath();
+}
+
+// 플레이어 그리기
+function drawPlayer() {
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+// 골대 그리기
+function drawGoal() {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+}
+
+// 게임 요소 업데이트
+function update() {
+    // 공 이동
+    ball.x += ball.directionX;
+    ball.y += ball.directionY;
+
+    // 공이 골대에 들어갔는지 확인
+    if (ball.x + ball.radius > goal.x && ball.y > goal.y && ball.y < goal.y + goal.height) {
+        resetBall();
+        score++;
+        alert('Goal! Score: ' + score);
+    }
+
+    // 공이 벽에 부딪히면 반사
+    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+        ball.directionY = -ball.directionY;
+    }
+    if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+        ball.directionX = -ball.directionX;
+    }
+
+    // 플레이어가 화면을 넘어가지 않도록
+    if (player.y < 0) player.y = 0;
+    if (player.y + player.height > canvas.height) player.y = canvas.height - player.height;
+}
+
+// 공을 다시 시작 위치로 초기화
+function resetBall() {
+    ball.x = 50;
+    ball.y = canvas.height / 2;
+    ball.directionX = 0;
+    ball.directionY = 0;
+}
+
+// 키 입력 처리
+window.addEventListener('keydown', (e) => {
+    switch (e.key) {
+        case 'ArrowUp':
+            player.y -= player.speed;
+            break;
+        case 'ArrowDown':
+            player.y += player.speed;
+            break;
+        case ' ':
+            if (ball.directionX === 0 && ball.directionY === 0) {
+                ball.directionX = 5; // 공 발사
+                ball.directionY = Math.random() > 0.5 ? 3 : -3;
+            }
+            break;
+    }
+});
+
+// 게임 루프
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawBall();
+    drawPlayer();
+    drawGoal();
+
+    update();
+    
+    requestAnimationFrame(gameLoop);
+}
+
+// 게임 시작
+gameLoop();
